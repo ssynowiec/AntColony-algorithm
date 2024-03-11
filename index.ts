@@ -235,7 +235,7 @@ const main = async () => {
     }
 
     let y = parseFloat(
-      await getInputFromConsole(`Podaj współrzędną x punktu ${name}: `),
+      await getInputFromConsole(`Podaj współrzędną y punktu ${name}: `),
     );
 
     while (isNaN(y)) {
