@@ -1,19 +1,5 @@
 import { createInterface } from "readline";
-
-interface City {
-  name: string;
-  x: number;
-  y: number;
-  feromone: number;
-}
-
-type Matrix = number[][];
-type Tour = number[];
-
-interface Tours {
-  iteration: number;
-  tours: Matrix;
-}
+import type { City, Matrix, Tour, Tours } from "./types";
 
 class AntColony {
   cities: City[];
@@ -81,8 +67,8 @@ class AntColony {
     return matrix;
   }
 
-  private run(iterations: number) {
-    let bestTour: Tour | undefined;
+  public run(iterations: number) {
+    let bestTour: Tour = [];
     let shortestDistance = Infinity;
     let allTours: Tours[] = [];
 
@@ -125,6 +111,9 @@ class AntColony {
       currentIndex = nextCity;
     }
 
+    // Dodaj powrót do punktu początkowego
+    tour.push(this.startIndex!);
+
     return tour;
   }
 
@@ -154,7 +143,7 @@ class AntColony {
     }
   }
 
-  private calculateTourDistance(tour: Tour) {
+  public calculateTourDistance(tour: Tour) {
     let distance = 0;
     for (let i = 0; i < tour.length - 1; i++) {
       const from = tour[i];
@@ -281,9 +270,6 @@ const main = async () => {
   );
   const { bestTour, shortestDistance, allTours } = colony.run(iterations);
 
-  console.log("Najkrótsza trasa:", getCityNamesFromTour(bestTour, cities));
-  console.log("Długość trasy:", shortestDistance);
-
   console.log("\nWszystkie trasy i ich długości:");
   allTours.forEach(({ iteration, tours }) => {
     console.log(`Iteracja ${iteration}:`);
@@ -294,6 +280,9 @@ const main = async () => {
     });
     console.log("------------");
   });
+
+  console.log("Najkrótsza trasa:", getCityNamesFromTour(bestTour, cities));
+  console.log("Długość trasy:", shortestDistance);
 };
 
 main();
