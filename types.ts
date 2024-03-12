@@ -2,7 +2,7 @@ export interface City {
   name: string;
   x: number;
   y: number;
-  feromone: number;
+  feromone?: number;
 }
 
 export interface Tours {
