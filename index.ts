@@ -65,7 +65,7 @@ const main = async () => {
     cities.push({ name, x, y });
   }
 
-  const numAnts = 10;
+  const numAnts = 5;
   const alpha = 1;
   const beta = 2;
   const rho = 0.5;
