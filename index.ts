@@ -1,116 +1,82 @@
-import { createInterface } from "readline";
-import type { City, Tour } from "./types";
-import { AntColony } from "./antColony";
+interface Point {
+  name: string;
+  x: number;
+  y: number;
+}
 
-const getCityNamesFromTour = (tour: Tour, cities: City[]) => {
-  return tour.map((index) => cities[index].name).join(" -> ");
+const euclideanDistance = (p1: Point, p2: Point): number => {
+  const dx = p1.x - p2.x;
+  const dy = p1.y - p2.y;
+  return Math.sqrt(dx * dx + dy * dy);
 };
 
-const getInputFromConsole = async (question: string) => {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise<string>((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer);
-    });
-  });
-};
-
-const getIndexFromCityName = (cities: City[], cityName: string) => {
-  for (let i = 0; i < cities.length; i++) {
-    if (cities[i].name === cityName) {
-      return i;
-    }
+const calculateTotalDistance = (path: Point[]): number => {
+  let totalDistance = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    totalDistance += euclideanDistance(path[i], path[i + 1]);
   }
-  return undefined;
+  return totalDistance;
 };
 
-const main = async () => {
-  let numCities = parseInt(await getInputFromConsole("Podaj liczbę punktów: "));
-
-  while (isNaN(numCities)) {
-    console.log("Liczba punktów musi być liczbą całkowitą");
-    numCities = parseInt(await getInputFromConsole("Podaj liczbę punktów: "));
+const nearestNeighborTSP = (
+  points: Point[],
+  startingIndex: number,
+): { path: Point[]; distance: number } => {
+  if (points.length === 0) return { path: [], distance: 0 };
+  if (startingIndex < 0 || startingIndex >= points.length) {
+    throw new Error("Invalid starting index");
   }
 
-  const cities: City[] = [];
-  for (let i = 0; i < numCities; i++) {
-    const name = await getInputFromConsole(`Podaj nazwę punktu ${i + 1}: `);
-    let x = parseFloat(
-      await getInputFromConsole(`Podaj współrzędną x punktu ${name}: `),
-    );
+  const visited: boolean[] = new Array(points.length).fill(false);
+  const path: Point[] = [];
+  let currentPoint = points[startingIndex];
+  path.push(currentPoint);
+  visited[startingIndex] = true;
 
-    while (isNaN(x)) {
-      console.log("Współrzędna x musi być liczbą");
-      x = parseFloat(
-        await getInputFromConsole(`Podaj współrzędną x punktu ${name}: `),
-      );
+  while (path.length < points.length) {
+    let nearestIndex = -1;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < points.length; i++) {
+      if (!visited[i]) {
+        const distance = euclideanDistance(currentPoint, points[i]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestIndex = i;
+        }
+      }
     }
 
-    let y = parseFloat(
-      await getInputFromConsole(`Podaj współrzędną y punktu ${name}: `),
-    );
-
-    while (isNaN(y)) {
-      console.log("Współrzędna y musi być liczbą");
-      y = parseFloat(
-        await getInputFromConsole(`Podaj współrzędną y punktu ${name}: `),
-      );
+    if (nearestIndex !== -1) {
+      path.push(points[nearestIndex]);
+      visited[nearestIndex] = true;
+      currentPoint = points[nearestIndex];
+    } else {
+      break;
     }
-
-    cities.push({ name, x, y });
   }
 
-  const numAnts = 5;
-  const alpha = 1;
-  const beta = 2;
-  const rho = 0.5;
-  const q = 100;
+  path.push(path[0]);
 
-  const startPoint = await getInputFromConsole(
-    "Podaj indeks lub nazwę punktu startowego: ",
-  );
+  const distance = calculateTotalDistance(path);
 
-  const startIndex = isNaN(parseInt(startPoint))
-    ? getIndexFromCityName(cities, startPoint)
-    : parseInt(startPoint);
-
-  if (startIndex === undefined) {
-    console.log("Nieprawidłowy punkt startowy");
-    return;
-  }
-
-  const colony = new AntColony(
-    cities,
-    numAnts,
-    alpha,
-    beta,
-    rho,
-    q,
-    startIndex,
-  );
-  const iterations = parseInt(
-    await getInputFromConsole("Podaj liczbę iteracji: "),
-  );
-  const { bestTour, shortestDistance, allTours } = colony.run(iterations);
-
-  console.log("\nWszystkie trasy i ich długości:");
-  allTours.forEach(({ iteration, tours }) => {
-    console.log(`Iteracja ${iteration}:`);
-    tours.forEach((tour, index) => {
-      console.log(
-        `Trasa ${index + 1}: ${getCityNamesFromTour(tour, cities)}, Długość: ${colony.calculateTourDistance(tour)}`,
-      );
-    });
-    console.log("------------");
-  });
-
-  console.log("Najkrótsza trasa:", getCityNamesFromTour(bestTour, cities));
-  console.log("Długość trasy:", shortestDistance);
+  return { path, distance };
 };
 
-main();
+const points: Point[] = [
+  { name: "A", x: 0, y: 0 },
+  { name: "B", x: 4, y: 7 },
+  { name: "C", x: 8, y: 13 },
+  { name: "D", x: 1, y: 8 },
+  { name: "E", x: 6, y: 4 },
+  { name: "F", x: 2, y: 10 },
+  { name: "G", x: 3, y: 3 },
+];
+
+const startingIndex = 1;
+const { path, distance } = nearestNeighborTSP(points, startingIndex);
+console.log(
+  "Najkrótsza ścieżka według algorytmu najbliższego sąsiada (z punktu startowego):",
+  path,
+);
+console.log("Długość najkrótszej ścieżki:", distance);
