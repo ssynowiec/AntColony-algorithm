@@ -1,8 +1,4 @@
-interface Point {
-  name: string;
-  x: number;
-  y: number;
-}
+import type { Point } from "./types";
 
 const euclideanDistance = (p1: Point, p2: Point): number => {
   const dx = p1.x - p2.x;
