@@ -1,9 +1,9 @@
 {
-  "name": "ant-colony-algorithm",
+  "name": "nearest-neighbor-algorithm",
   "author": "Stanisław Synowiec <stanislaw@ssynowiec.pl> (https://ssynowiec.pl)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ssynowiec/AntColony-algorithm.git"
+    "url": "https://github.com/ssynowiec/nearest-neighbor-algorithm.git"
   },
   "version": "1.0.0",
   "description": "",
