@@ -1,4 +1,10 @@
 import type { Point } from "./types";
+import * as readline from "readline";
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 const euclideanDistance = (p1: Point, p2: Point): number => {
   const dx = p1.x - p2.x;
@@ -59,20 +65,77 @@ const nearestNeighborTSP = (
   return { path, distance };
 };
 
-const points: Point[] = [
-  { name: "A", x: 0, y: 0 },
-  { name: "B", x: 4, y: 7 },
-  { name: "C", x: 8, y: 13 },
-  { name: "D", x: 1, y: 8 },
-  { name: "E", x: 6, y: 4 },
-  { name: "F", x: 2, y: 10 },
-  { name: "G", x: 3, y: 3 },
-];
+const addPointManually = (): Promise<Point> => {
+  return new Promise((resolve, reject) => {
+    rl.question("Podaj nazwę punktu: ", (name: string) => {
+      rl.question("Podaj współrzędną x: ", (xStr: string) => {
+        const x = parseFloat(xStr);
+        if (isNaN(x)) {
+          reject(new Error("Współrzędna x musi być liczbą"));
+          return;
+        }
+        rl.question("Podaj współrzędną y: ", (yStr: string) => {
+          const y = parseFloat(yStr);
+          if (isNaN(y)) {
+            reject(new Error("Współrzędna y musi być liczbą"));
+            return;
+          }
+          resolve({ name, x, y });
+        });
+      });
+    });
+  });
+};
 
-const startingIndex = 1;
-const { path, distance } = nearestNeighborTSP(points, startingIndex);
-console.log(
-  "Najkrótsza ścieżka według algorytmu najbliższego sąsiada (z punktu startowego):",
-  path,
-);
-console.log("Długość najkrótszej ścieżki:", distance);
+const main = async () => {
+  const points: Point[] = [];
+
+  while (true) {
+    try {
+      const point = await addPointManually();
+      points.push(point);
+      const addMore = await new Promise<boolean>((resolve) => {
+        rl.question(
+          "Czy chcesz dodać kolejny punkt? (tak/nie): ",
+          (answer: string) => {
+            resolve(answer.toLowerCase() === "tak");
+          },
+        );
+      });
+      if (!addMore) {
+        break;
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
+
+  const startingIndex = await new Promise<number>((resolve) => {
+    rl.question("Podaj indeks punktu startowego: ", (indexStr: string) => {
+      const index = parseInt(indexStr);
+      resolve(index);
+    });
+  });
+
+  if (
+    isNaN(startingIndex) ||
+    startingIndex < 0 ||
+    startingIndex >= points.length
+  ) {
+    console.error("Nieprawidłowy indeks punktu startowego");
+    rl.close();
+    return;
+  }
+
+  const { path, distance } = nearestNeighborTSP(points, startingIndex);
+
+  console.log(
+    "Najkrótsza ścieżka według algorytmu najbliższego sąsiada (z punktu startowego):",
+    path,
+  );
+  console.log("Długość najkrótszej ścieżki:", distance);
+
+  rl.close();
+};
+
+main();
